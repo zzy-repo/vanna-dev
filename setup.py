@@ -1,0 +1,32 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="vanna",
+    version="0.1.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    install_requires=[
+        "requests>=2.31.0",
+        "tabulate>=0.9.0",
+        "plotly>=5.18.0",
+        "pandas>=2.0.0",
+        "sqlparse>=0.4.4",
+        "kaleido>=0.2.1",
+        "flask>=3.0.0",
+        "flask-sock>=0.7.0",
+        "flasgger>=0.9.7.1",
+        "sqlalchemy>=2.0.0",
+        "openai>=1.12.0",
+        "chromadb>=0.4.22",
+        "python-dotenv>=1.0.0",
+        "psycopg2-binary>=2.9.9",
+        "pymysql>=1.1.0",
+        "clickhouse-connect>=0.7.0",
+        "oracledb>=2.0.0",
+        "google-cloud-bigquery>=3.17.0",
+        "duckdb>=0.9.2",
+        "pyodbc>=5.0.1",
+        "pyhive>=0.6.5",
+    ],
+    python_requires=">=3.8",
+) 
