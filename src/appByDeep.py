@@ -3,7 +3,13 @@ from vanna.chromadb import ChromaDB_VectorStore
 from openai import OpenAI
 import os
 
-api_key="sk-6ff654e4446b462288f2ebb571762458"
+# 从环境变量中读取 API key
+api_key = os.getenv("DEEPSEEK_API_KEY")
+if not api_key:
+    raise ValueError("请设置环境变量 DEEPSEEK_API_KEY")
+else:
+    print("api_key",api_key)
+
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"

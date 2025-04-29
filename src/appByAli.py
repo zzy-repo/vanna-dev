@@ -3,7 +3,13 @@ from vanna.chromadb import ChromaDB_VectorStore
 from openai import OpenAI
 import os
 
-api_key = 'sk-2223d3681cc74de39a00029c37c46293'
+# 从环境变量中读取 API key
+api_key = os.getenv("DASHSCOPE_API_KEY")
+if not api_key:
+    raise ValueError("请设置环境变量 DASHSCOPE_API_KEY")
+else:
+    print("api_key",api_key)
+
 client = OpenAI(
     api_key=api_key,
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
