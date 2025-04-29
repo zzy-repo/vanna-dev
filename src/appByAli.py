@@ -9,6 +9,9 @@ if current_dir not in sys.path:
 from vanna.openai import OpenAI_Chat
 from vanna.chromadb import ChromaDB_VectorStore
 from openai import OpenAI
+from sentence_transformers import SentenceTransformer
+from chromadb.utils import embedding_functions
+from chromadb import Documents, Embeddings
 
 # 添加断言确保使用的是当前项目下的vanna模块
 import vanna
@@ -26,12 +29,28 @@ client = OpenAI(
     base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
 )
 
+# 自定义SentenceTransformer嵌入函数
+class CustomSentenceTransformerEmbeddingFunction(embedding_functions.EmbeddingFunction[Documents]):
+    def __init__(self, model_name="aspire/acge_text_embedding"):
+        self.model = SentenceTransformer(model_name)
+    
+    def __call__(self, input: Documents) -> Embeddings:
+        # 替换换行符，这可能会影响性能
+        input = [t.replace("\n", " ") for t in input]
+        # 使用模型生成嵌入
+        embeddings = self.model.encode(input)
+        return embeddings.tolist()
+
 class MyVanna(ChromaDB_VectorStore, OpenAI_Chat):
     def __init__(self,client=None,config=None):
+        # 创建自定义嵌入函数
+        custom_embedding_function = CustomSentenceTransformerEmbeddingFunction()
+        
         chroma_config = {
           "path": os.path.join(".", "golden_db"),  # 关键参数
           "client": "persistent",  # 必须为持久化模式
           "n_results": 10,  # 其他参数按需配置
+          "embedding_function": custom_embedding_function,  # 使用自定义嵌入函数
         }
         ChromaDB_VectorStore.__init__(self, config=chroma_config)
         OpenAI_Chat.__init__(self,client=client, config=config)

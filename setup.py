@@ -27,6 +27,7 @@ setup(
         "duckdb>=0.9.2",
         "pyodbc>=5.0.1",
         "pyhive>=0.6.5",
+        "sentence-transformers>=2.2.2",
     ],
     python_requires=">=3.8",
 ) 
