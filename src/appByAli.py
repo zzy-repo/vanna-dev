@@ -10,6 +10,10 @@ from vanna.openai import OpenAI_Chat
 from vanna.chromadb import ChromaDB_VectorStore
 from openai import OpenAI
 
+# 添加断言确保使用的是当前项目下的vanna模块
+import vanna
+assert os.path.dirname(vanna.__file__) == os.path.join(current_dir, "vanna"), "请确保使用的是当前项目下的vanna模块，而不是系统安装的vanna模块"
+
 # 从环境变量中读取 API key
 api_key = os.getenv("DASHSCOPE_API_KEY")
 if not api_key:
