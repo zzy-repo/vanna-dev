@@ -16,3 +16,13 @@ chromadb>=0.4.22
 
 # 环境变量管理
 python-dotenv>=1.0.0 
+
+# 数据库驱动依赖
+psycopg2-binary>=2.9.9  # PostgreSQL驱动
+pymysql>=1.1.0  # MySQL驱动
+clickhouse-connect>=0.7.0  # ClickHouse驱动
+oracledb>=2.0.0  # Oracle驱动
+google-cloud-bigquery>=3.17.0  # BigQuery驱动
+duckdb>=0.9.2  # DuckDB驱动
+pyodbc>=5.0.1  # ODBC驱动，用于MSSQL
+pyhive>=0.6.5  # Hive驱动 
