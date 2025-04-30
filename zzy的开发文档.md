@@ -4,3 +4,5 @@
 - build: 设置了requirement.txt方便一键构建python环境
 - fix: 添加了抽象类确保代码正常运行
 - feat: 实现自定义嵌入函数功能并将嵌入函数修改为“aspire/acge_text_embedding”
+- add: 添加了测试场景
+- test: 添加了有关于相似度的测试

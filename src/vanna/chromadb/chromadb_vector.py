@@ -1,5 +1,8 @@
 import json
+import logging
+import os
 from typing import List
+from logging.handlers import RotatingFileHandler
 
 import chromadb
 import pandas as pd
@@ -8,6 +11,36 @@ from chromadb.utils import embedding_functions
 
 from ..base import VannaBase
 from ..utils import deterministic_uuid
+
+# 配置日志
+logger = logging.getLogger('vanna.vector_search')
+logger.setLevel(logging.INFO)
+
+# 创建日志目录
+log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+
+# 创建文件处理器
+file_handler = RotatingFileHandler(
+    filename=os.path.join(log_dir, 'vector_search.log'),
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5,
+    encoding='utf-8'
+)
+file_handler.setLevel(logging.INFO)
+
+# 创建控制台处理器
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# 设置日志格式
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# 添加处理器到logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 default_ef = embedding_functions.DefaultEmbeddingFunction()
 
@@ -215,43 +248,73 @@ class ChromaDB_VectorStore(VannaBase):
             query_results (pd.DataFrame): The dataframe to use.
 
         Returns:
-            List[str] or None: The extracted documents, or an empty list or
-            single document if an error occurred.
+            List[dict]: The extracted documents with similarity scores, or an empty list if an error occurred.
         """
         if query_results is None:
             return []
 
         if "documents" in query_results:
             documents = query_results["documents"]
-
+            distances = query_results.get("distances", [])
+            
             if len(documents) == 1 and isinstance(documents[0], list):
                 try:
-                    documents = [json.loads(doc) for doc in documents[0]]
+                    # 将文档和相似度分数组合在一起
+                    results = []
+                    for doc, distance in zip(documents[0], distances[0]):
+                        try:
+                            parsed_doc = json.loads(doc)
+                            parsed_doc["similarity_score"] = 1 - distance  # 将距离转换为相似度分数
+                            results.append(parsed_doc)
+                        except json.JSONDecodeError:
+                            results.append({
+                                "content": doc,
+                                "similarity_score": 1 - distance
+                            })
+                    return results
                 except Exception as e:
-                    return documents[0]
+                    return [{
+                        "content": documents[0],
+                        "similarity_score": 1 - distances[0][0] if distances else None
+                    }]
 
             return documents
 
     def get_similar_question_sql(self, question: str, **kwargs) -> list:
-        return ChromaDB_VectorStore._extract_documents(
-            self.sql_collection.query(
-                query_texts=[question],
-                n_results=self.n_results_sql,
-            )
+        results = self.sql_collection.query(
+            query_texts=[question],
+            n_results=self.n_results_sql,
         )
+        extracted_results = ChromaDB_VectorStore._extract_documents(results)
+        
+        # 记录日志
+        for result in extracted_results:
+            logger.info(f"SQL检索 - 问题: {question}, 相似度: {result.get('similarity_score', 'N/A')}, 内容: {result.get('sql', 'N/A')}")
+        
+        return extracted_results
 
     def get_related_ddl(self, question: str, **kwargs) -> list:
-        return ChromaDB_VectorStore._extract_documents(
-            self.ddl_collection.query(
-                query_texts=[question],
-                n_results=self.n_results_ddl,
-            )
+        results = self.ddl_collection.query(
+            query_texts=[question],
+            n_results=self.n_results_ddl,
         )
+        extracted_results = ChromaDB_VectorStore._extract_documents(results)
+        
+        # 记录日志
+        for result in extracted_results:
+            logger.info(f"DDL检索 - 问题: {question}, 相似度: {result.get('similarity_score', 'N/A')}, 内容: {result.get('content', 'N/A')}")
+        
+        return [result.get('content', '') for result in extracted_results]
 
     def get_related_documentation(self, question: str, **kwargs) -> list:
-        return ChromaDB_VectorStore._extract_documents(
-            self.documentation_collection.query(
-                query_texts=[question],
-                n_results=self.n_results_documentation,
-            )
+        results = self.documentation_collection.query(
+            query_texts=[question],
+            n_results=self.n_results_documentation,
         )
+        extracted_results = ChromaDB_VectorStore._extract_documents(results)
+        
+        # 记录日志
+        for result in extracted_results:
+            logger.info(f"文档检索 - 问题: {question}, 相似度: {result.get('similarity_score', 'N/A')}, 内容: {result.get('content', 'N/A')}")
+        
+        return [result.get('content', '') for result in extracted_results]

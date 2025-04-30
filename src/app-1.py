@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 
 # 将当前目录添加到Python路径中，确保优先使用本地模块
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -70,6 +71,10 @@ if os.path.exists("golden_db"):
 
 # 创建新的实例，这会自动创建新的集合
 vn = MyVanna(client=client,config={"model": "qwen-plus","temperature":0.5})
+
+# 添加初始化日志
+logger = logging.getLogger('vanna.vector_search')
+logger.info("qwen-max + chorom(aspire/acge_text_embedding) 初始化完成")
 
 # 检查MySQL密码是否设置
 mysql_password = os.getenv("MYSQL_PASSWORD")
